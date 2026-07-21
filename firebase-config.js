@@ -1,8 +1,9 @@
-// Replace each value with your Firebase web app configuration.
-// It is normal for Firebase web configuration to be visible in a browser app.
 export const firebaseConfig = {
   apiKey: "AIzaSyANvsATD-UyT8ebJ9aTiDDdfz3dfeIzKpE",
   authDomain: "seat-reservation-system-a2dc1.firebaseapp.com",
+
+  databaseURL: "https://seat-reservation-system-a2dc1-default-rtdb.asia-southeast1.firebasedatabase.app/",
+
   projectId: "seat-reservation-system-a2dc1",
   storageBucket: "seat-reservation-system-a2dc1.firebasestorage.app",
   messagingSenderId: "505187790466",
