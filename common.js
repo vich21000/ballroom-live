@@ -9,7 +9,27 @@ export const TABLE_X={A:240,B:620,C:1000,D:1560,E:1940,F:2320};export const TABL
 export function roomPath(s=''){return `rooms/${roomId}${s?'/'+s:''}`};export function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))};export function short(v,m=10){v=String(v||'').trim();return v.length>m?v.slice(0,m-1)+'…':v};export function normalize(v){return v?(Array.isArray(v)?Object.fromEntries(v.filter(Boolean).map(x=>[x.id,x])):v):{}};
 export function makeGuestCode(){const a=new Uint8Array(12);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')};export function qrPayload(s){return `BALLROOM|${roomId}|${s.id}|${s.guestCode}`};
 export function defaultRoom(){const tables={},seats={};for(const [id,x] of Object.entries(TABLE_X)){tables[id]={id,x,y:205,rows:8,nextNumber:17};for(let n=1;n<=16;n++)seats[id+n]={id:id+n,tableId:id,number:n,rowIndex:Math.floor((n-1)/2),side:n%2?'left':'right',status:'available',guestName:'',groupName:'',groupId:'',groupColor:GROUP_COLORS[0].value,conditions:'',notes:'',confirmed:false,guestCode:'',checkedIn:false,checkedInAt:null,updatedAt:null}}return{meta:{title:'Nantigan and Ativich',version:'online-final',updatedAt:Date.now()},tables,seats,backups:{}}}
-export async function ensureRoom(){const r=ref(db,roomPath());const s=await get(r);if(!s.exists())await set(r,defaultRoom())}
+export async function ensureRoom(){
+  const r=ref(db,roomPath());
+  const s=await get(r);
+  const fresh=defaultRoom();
+  if(!s.exists()){
+    await set(r,fresh);
+    return;
+  }
+  const current=s.val()||{};
+  const patch={};
+  if(!current.meta)patch.meta=fresh.meta;
+  const currentTables=normalize(current.tables);
+  const currentSeats=normalize(current.seats);
+  for(const [id,t] of Object.entries(fresh.tables)){
+    if(!currentTables[id])patch[`tables/${id}`]=t;
+  }
+  for(const [id,seat] of Object.entries(fresh.seats)){
+    if(!currentSeats[id])patch[`seats/${id}`]=seat;
+  }
+  if(Object.keys(patch).length)await update(r,patch);
+}
 export function seatPos(t,s){return{x:s.side==='left'?t.x-GAP-SEAT_W:t.x+TABLE_W+GAP,y:t.y+18+s.rowIndex*ROW_GAP}}
 export function drawBase(canvas,tables){canvas.innerHTML='<div class="screen-bar"></div><div class="main-stage">MAIN STAGE</div><div class="center-aisle"></div><div class="gate bride">GATE BRIDE</div><div class="gate groom">GATE GROOM</div>';canvas.querySelector('.main-stage').style.left=(STAGE_CENTER-210)+'px';const aisle=canvas.querySelector('.center-aisle');aisle.style.left=AISLE_LEFT+'px';aisle.style.width=AISLE_W+'px';Object.values(tables).forEach(t=>{const e=document.createElement('div');e.className='long-table';e.style.left=t.x+'px';e.style.top=t.y+'px';e.style.height=Math.max(140,t.rows*ROW_GAP+28)+'px';e.innerHTML=`<strong>TABLE ${esc(t.id)}</strong><span>${t.rows} rows</span>`;canvas.appendChild(e)})}
 export function seatEl(s,t,{selected=false,publicMode=false,onClick=null}={}){const p=seatPos(t,s),b=document.createElement('button');b.className=`seat-card ${s.status||'available'} ${s.checkedIn?'checked-in':''} ${selected?'selected':''}`;b.style.left=p.x+'px';b.style.top=p.y+'px';if(s.status!=='available'&&!s.checkedIn)b.style.background=s.groupColor||GROUP_COLORS[0].value;b.innerHTML=`<span class="seat-no">${esc(s.id)}</span><span class="guest-line">${esc(short(s.guestName)||'—')}</span><span class="group-line">${esc(short(s.groupName)||'—')}</span>`;b.title=`Seat: ${s.id}\nGuest: ${s.guestName||'—'}\nGroup: ${s.groupName||'—'}\nStatus: ${s.status||'available'}\nConfirmed: ${s.confirmed?'Yes':'No'}\nCheck-in: ${s.checkedIn?'Checked in':'Not arrived'}${publicMode?'':`\nConditions: ${s.conditions||'—'}\nNotes: ${s.notes||'—'}`}`;if(onClick)b.onclick=()=>onClick(s);return b}
