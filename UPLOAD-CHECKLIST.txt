@@ -1,0 +1,32 @@
+BALLROOM ONLINE - COMPLETE UPLOAD PACKAGE
+
+Upload ALL files and folders in this folder to the ROOT of your GitHub repository.
+
+Required root files:
+- index.html
+- display.html
+- checkin.html
+- summary.html
+- tickets.html
+- styles.css
+- common.js
+- admin.js
+- display.js
+- checkin.js
+- summary.js
+- tickets.js
+- firebase-config.js
+- google-sheet-config.js
+- database.rules.json
+
+Required folders:
+- assets/
+  - color-logo.png
+  - white-logo.png
+- apps-script/
+  - Code.gs
+
+IMPORTANT:
+1. Keep your real existing Firebase values inside firebase-config.js.
+2. index.html must be at the repository root, not inside another folder.
+3. Do not upload only the HTML files. styles.css and all JavaScript files are required.
