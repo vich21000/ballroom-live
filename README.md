@@ -1,49 +1,42 @@
-# Ballroom Live Seat Reservation
+# Ballroom Online Final
 
-This version shares seat changes live between phones and computers. It is designed for GitHub Pages plus Firebase Realtime Database.
+Approved online version based on the final offline demo.
 
-## 1. Create Firebase project
+## Before uploading
 
-1. Open Firebase Console and create a project.
-2. Add a **Web app**.
-3. Open **Build > Authentication > Sign-in method** and enable **Anonymous**.
-4. Open **Build > Realtime Database**, create a database, and choose a region near your users.
-5. In Realtime Database **Rules**, paste the contents of `database.rules.json`, then publish.
-6. Open Project settings > Your apps > SDK setup and configuration.
-7. Copy the configuration values into `firebase-config.js`.
-8. Make sure `databaseURL` exactly matches the URL shown by Realtime Database.
+1. Copy your **existing working Firebase values** into `firebase-config.js`.
+2. In Firebase Authentication, enable **Anonymous** sign-in.
+3. Deploy `database.rules.json` to Realtime Database.
+4. Upload every file in this folder to the root of your GitHub Pages repository.
+5. Keep the page URLs with the same room query, for example `?room=main-ballroom`.
 
-## 2. Test locally
+Do not overwrite a working Firebase config with placeholder values.
 
-Browsers block JavaScript modules when opening files directly. Run a small local web server:
+## Pages
 
-```bash
-python -m http.server 8080
-```
+- `index.html` — Admin
+- `display.html` — Public display/search
+- `checkin.html` — iPad QR check-in
+- `summary.html` — Summary, CSV, Google Sheet sync
+- `tickets.html` — 10-ticket A4 printing
 
-Then open:
+## Backups
 
-```text
-http://localhost:8080/?room=wedding-001
-```
+- Every reset/import/restore creates a cloud snapshot first.
+- Export JSON regularly and keep it in Google Drive.
+- Reset is protected by masked PIN entry. PIN: `1800`.
 
-Use the same `room` value on every device to see the same live data.
+## Google Sheet sync
 
-## 3. Publish with GitHub Pages
+1. Open the target Sheet.
+2. Extensions → Apps Script.
+3. Paste `apps-script/Code.gs`.
+4. Deploy as Web app, execute as yourself, access: anyone with link.
+5. Put the deployment URL in `google-sheet-config.js`.
 
-1. Create a new GitHub repository.
-2. Upload every file from this folder to the repository root.
-3. Open repository **Settings > Pages**.
-4. Under Build and deployment, choose **Deploy from a branch**.
-5. Select `main` and `/ (root)`, then save.
-6. Open the published GitHub Pages URL and add a room, for example:
+Target Sheet ID is already set to:
+`1-JhDg21Kd1H63KbqnYXXzp3RWot7PkTU4Vecnlc-TB8`
 
-```text
-https://YOUR-NAME.github.io/YOUR-REPOSITORY/?room=wedding-001
-```
+## Camera requirements
 
-Use the **Copy live link** button to share the same room with your team.
-
-## Important security note
-
-This starter uses anonymous login. Anyone who has a room link can edit that room. For production use, add staff accounts and stronger database rules before sharing publicly.
+Camera scanning requires HTTPS. GitHub Pages provides HTTPS. On iPad, allow camera permission when prompted.
