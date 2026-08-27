@@ -5,7 +5,7 @@ import { firebaseConfig } from "./firebase-config.js";
 export const params=new URLSearchParams(location.search);export const roomId=(params.get('room')||'main-ballroom').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,80)||'main-ballroom';
 const app=initializeApp(firebaseConfig);const auth=getAuth(app);export const db=getDatabase(app);await signInAnonymously(auth);export{ref,onValue,get,set,update,runTransaction,serverTimestamp};
 export const GROUP_COLORS=[['Soft pink','#f7d6df'],['Soft blue','#d8e8fb'],['Soft green','#d9efd9'],['Soft yellow','#f8edbd'],['Soft purple','#e7ddf6'],['Soft orange','#f7ddc6'],['Soft teal','#d7efec'],['Soft grey','#e4e7eb'],['Soft rose','#f4d8d2'],['Soft mint','#dcefe5'],['Soft lavender','#e4def7'],['Soft sand','#eee4cf']].map(([label,value])=>({label,value}));
-export const TABLE_X={A:240,B:620,C:1000,D:1560,E:1940,F:2320};export const TABLE_W=90,SEAT_W=82,GAP=32,ROW_GAP=62,STAGE_CENTER=1325,AISLE_LEFT=1210,AISLE_W=230,WORLD_W=2640,WORLD_H=1680,DEFAULT_ROWS=21;
+export const TABLE_X={A:220,B:560,C:900,D:1240,E:2050,F:2390,G:2730,H:3070};export const TABLE_W=90,SEAT_W=82,GAP=32,ROW_GAP=62,STAGE_CENTER=1690,AISLE_LEFT=1575,AISLE_W=230,WORLD_W=3380,WORLD_H=1400,DEFAULT_ROWS=16;
 export function roomPath(s=''){return `rooms/${roomId}${s?'/'+s:''}`};export function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))};export function short(v,m=10){v=String(v||'').trim();return v.length>m?v.slice(0,m-1)+'…':v};export function normalize(v){return v?(Array.isArray(v)?Object.fromEntries(v.filter(Boolean).map(x=>[x.id,x])):v):{}};
 export function makeGuestCode(){const a=new Uint8Array(12);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')};export function qrPayload(s){return `BALLROOM|${roomId}|${s.id}|${s.guestCode}`};
 export function defaultRoom(){const tables={},seats={};for(const [id,x] of Object.entries(TABLE_X)){tables[id]={id,x,y:205,rows:DEFAULT_ROWS,nextNumber:DEFAULT_ROWS*2+1};for(let n=1;n<=DEFAULT_ROWS*2;n++)seats[id+n]={id:id+n,tableId:id,number:n,rowIndex:Math.floor((n-1)/2),side:n%2?'left':'right',status:'available',guestName:'',groupName:'',groupId:'',groupColor:GROUP_COLORS[0].value,conditions:'',notes:'',confirmed:false,guestCode:'',checkedIn:false,checkedInAt:null,updatedAt:null}}return{meta:{title:'Nantigan and Ativich',version:'online-final',updatedAt:Date.now()},tables,seats,backups:{}}}
@@ -22,18 +22,42 @@ export async function ensureRoom(){
   const seats=normalize(current.seats);
   const writes=[];
   if(!current.meta)writes.push(set(ref(db,roomPath('meta')),fresh.meta));
+
+  // Ensure all 8 standard tables A-H exist at their standard positions.
   for(const [id,t] of Object.entries(fresh.tables)){
     if(!tables[id]){
       writes.push(set(ref(db,roomPath(`tables/${id}`)),t));
     }else{
       const currentRows=Number(tables[id].rows)||0;
       const currentNext=Number(tables[id].nextNumber)||1;
-      if(currentRows<DEFAULT_ROWS)writes.push(update(ref(db,roomPath(`tables/${id}`)),{rows:DEFAULT_ROWS,nextNumber:Math.max(currentNext,DEFAULT_ROWS*2+1)}));
+      // Reposition tables to the new 8-column standard.
+      const tablePatch={x:t.x,y:t.y};
+      if(currentRows<DEFAULT_ROWS){
+        tablePatch.rows=DEFAULT_ROWS;
+        tablePatch.nextNumber=Math.max(currentNext,DEFAULT_ROWS*2+1);
+      }else if(currentRows===DEFAULT_ROWS){
+        tablePatch.nextNumber=Math.max(currentNext,DEFAULT_ROWS*2+1);
+      }
+      writes.push(update(ref(db,roomPath(`tables/${id}`)),tablePatch));
     }
   }
+
+  // Ensure the first 32 seats exist for every standard table.
   for(const [id,seat] of Object.entries(fresh.seats)){
     if(!seats[id])writes.push(set(ref(db,roomPath(`seats/${id}`)),seat));
   }
+
+  // Safely trim old extra empty rows above seat 32. If any extra seat contains
+  // guest/check-in/reservation data, preserve that table and its extra rows.
+  for(const id of Object.keys(TABLE_X)){
+    const extras=Object.values(seats).filter(s=>s&&s.tableId===id&&Number(s.number)>DEFAULT_ROWS*2);
+    const hasUsedExtra=extras.some(s=>s.guestName||s.groupName||s.confirmed||s.checkedIn||(s.status&&s.status!=='available')||s.conditions||s.notes);
+    if(extras.length && !hasUsedExtra){
+      for(const s of extras)writes.push(set(ref(db,roomPath(`seats/${s.id}`)),null));
+      writes.push(update(ref(db,roomPath(`tables/${id}`)),{rows:DEFAULT_ROWS,nextNumber:DEFAULT_ROWS*2+1}));
+    }
+  }
+
   if(writes.length)await Promise.all(writes);
   return fresh;
 }
