@@ -4,7 +4,12 @@ const canvas=$('canvas'),colorInput=$('colorInput'),emptyState=$('emptyState'),s
 
 await ensureRoom();
 const state={tables:{},seats:{},meta:{planLocked:false},selected:null,mode:'select',source:null};
+let formDirty=false, panelSeatId=null;
 GROUP_COLORS.forEach(c=>colorInput.add(new Option(c.label,c.value)));
+[statusInput,guestInput,groupInput,groupIdInput,colorInput,souvenirInput,conditionsInput,notesInput].forEach(el=>{
+  el.addEventListener('input',()=>{formDirty=true});
+  el.addEventListener('change',()=>{formDirty=true});
+});
 
 onValue(ref(db,roomPath()),s=>{
   const r=mergeRoomDefaults(s.val()||{});state.tables=r.tables;state.seats=r.seats;state.meta=r.meta||{};render();
@@ -28,10 +33,28 @@ function render(){
   renderPanel();renderControls();renderPlanSafety();
   const a=Object.values(state.seats);total.textContent=a.length;assigned.textContent=a.filter(s=>s.guestName||s.groupName).length;checked.textContent=a.filter(s=>s.checkedIn).length;available.textContent=a.filter(s=>!s.guestName&&!s.groupName).length;
 }
-function renderPanel(){
-  const s=state.seats[state.selected];emptyState.hidden=!!s;seatPanel.hidden=!s;if(!s)return;
-  seatTitle.textContent='Seat '+s.id;statusInput.value=s.status;guestInput.value=s.guestName||'';groupInput.value=s.groupName||'';groupIdInput.value=s.groupId||'';colorInput.value=s.groupColor||GROUP_COLORS[0].value;souvenirInput.value=isGiftEligible(s)?'yes':'no';conditionsInput.value=s.conditions||'';notesInput.value=s.notes||'';
+function renderPanel(force=false){
+  const s=state.seats[state.selected];
+  emptyState.hidden=!!s;seatPanel.hidden=!s;
+  if(!s){panelSeatId=null;formDirty=false;return;}
+  seatTitle.textContent='Seat '+s.id;
+  // Never wipe an in-progress form because Firebase emitted a room update.
+  // This is especially important when another check-in station is active.
+  if(!force&&formDirty&&panelSeatId===s.id){
+    seatPanel.classList.toggle('plan-locked-form',isLocked());
+    return;
+  }
+  panelSeatId=s.id;
+  statusInput.value=s.status||'available';
+  guestInput.value=s.guestName||'';
+  groupInput.value=s.groupName||'';
+  groupIdInput.value=s.groupId||'';
+  colorInput.value=s.groupColor||GROUP_COLORS[0].value;
+  souvenirInput.value=isGiftEligible(s)?'yes':'no';
+  conditionsInput.value=s.conditions||'';
+  notesInput.value=s.notes||'';
   seatPanel.classList.toggle('plan-locked-form',isLocked());
+  formDirty=false;
 }
 function renderControls(){
   tableControls.innerHTML='';Object.values(state.tables).sort((a,b)=>a.id.localeCompare(b.id)).forEach(t=>{const d=document.createElement('div');d.className='table-control';d.innerHTML=`<strong>${t.id}</strong><button>+ Row</button><button>− Row</button>`;d.children[1].disabled=false;d.children[2].disabled=false;d.children[1].onclick=()=>addRow(t.id);d.children[2].onclick=()=>removeRow(t.id);tableControls.appendChild(d)});
@@ -67,7 +90,7 @@ async function removeRow(id){
 function mode(m){state.mode=m;state.source=null;selectMode.classList.toggle('active',m==='select');moveGuestMode.classList.toggle('active',m==='guest');moveGroupMode.classList.toggle('active',m==='group');modeHelp.textContent=m==='select'?'Select a seat to edit it.':m==='guest'?'Select occupied seat, then empty destination.':'Select group member, then first empty destination.'}
 selectMode.onclick=()=>mode('select');moveGuestMode.onclick=async()=>{if(await ensureEditable())mode('guest')};moveGroupMode.onclick=async()=>{if(await ensureEditable())mode('group')};
 async function clickSeat(s){
-  if(state.mode==='select'){state.selected=s.id;return render()}
+  if(state.mode==='select'){if(state.selected!==s.id){formDirty=false;panelSeatId=null}state.selected=s.id;return render()}
   if(!(await ensureEditable()))return mode('select');
   if(!state.source){if(state.mode==='guest'&&!s.guestName&&!s.groupName)return alert('Choose occupied seat.');if(state.mode==='group'&&!s.groupId)return alert('Seat has no Group ID.');state.source=s.id;return}
   if(s.guestName||s.groupName)return alert('Destination must be empty.');
@@ -82,55 +105,89 @@ async function clickSeat(s){
   }
   mode('select');
 }
-function formPatch(){return{status:statusInput.value,guestName:guestInput.value.trim(),groupName:groupInput.value.trim(),groupId:groupIdInput.value.trim(),groupColor:colorInput.value,souvenirEligible:souvenirInput.value==='yes',conditions:conditionsInput.value.trim(),notes:notesInput.value.trim(),updatedAt:Date.now()}}
-function guestSaveExtras(s){
-  const name=guestInput.value.trim();
-  if(!name)return{confirmed:false,guestCode:'',checkedIn:false,checkedInAt:null};
+function captureForm(){
+  return{
+    status:statusInput.value,
+    guestName:guestInput.value.trim(),
+    groupName:groupInput.value.trim(),
+    groupId:groupIdInput.value.trim(),
+    groupColor:colorInput.value,
+    souvenirEligible:souvenirInput.value==='yes',
+    conditions:conditionsInput.value.trim(),
+    notes:notesInput.value.trim(),
+    updatedAt:Date.now()
+  };
+}
+function guestSaveExtras(s,draft){
+  const name=draft.guestName;
+  if(!name)return{confirmed:false,guestCode:'',checkedIn:false,checkedInAt:null,status:'available'};
   return{
     confirmed:true,
     guestCode:s.guestCode||makeGuestCode(),
-    status:statusInput.value==='available'?'reserved':statusInput.value
+    status:draft.status==='available'?'reserved':draft.status
   };
 }
-async function persistSeat(s,extra={}){
+async function persistSeat(s,draft,extra={}){
   if(!s)return null;
-  const patch={...formPatch(),...guestSaveExtras(s),...extra};
+  // IMPORTANT: draft is captured BEFORE any backup/meta write can trigger onValue().
+  const patch={...draft,...guestSaveExtras(s,draft),...extra};
   await update(ref(db,roomPath(`seats/${s.id}`)),patch);
   return{...s,...patch};
 }
+async function finishSuccessfulEdit(next){
+  formDirty=false;
+  if(next&&state.selected===next.id){
+    state.seats[next.id]={...(state.seats[next.id]||{}),...next};
+    renderPanel(true);
+  }
+}
 saveBtn.onclick=async()=>{
+  const seatId=state.selected;
+  const initial=state.seats[seatId];
+  if(!initial)return;
+  const draft=captureForm(); // capture first — before unlock / backup / Firebase refresh
   if(!(await ensureEditable()))return;
-  const s=state.seats[state.selected];if(!s)return;
+  const s=state.seats[seatId]||initial;
   try{
     saveBtn.disabled=true;
     await saveUndoSnapshot(`Edit seat ${s.id}`);
-    const next=await persistSeat(s);
+    const next=await persistSeat(s,draft);
+    await finishSuccessfulEdit(next);
     await logActivity('Guest details saved',`${s.id} ${next.guestName||'(empty)'}${next.souvenirEligible?' · Gift redemption':''}`);
   }catch(err){console.error(err);alert('Could not save this guest: '+err.message)}finally{saveBtn.disabled=false}
 };
 souvenirInput.addEventListener('change',async()=>{
-  if(!state.selected)return;
-  if(!(await ensureEditable())){renderPanel();return;}
-  const s=state.seats[state.selected];if(!s)return;
+  const seatId=state.selected;
+  const initial=state.seats[seatId];
+  if(!initial)return;
+  const draft=captureForm(); // preserve Yes/No and any typed guest details immediately
+  if(!(await ensureEditable())){renderPanel(true);return;}
+  const s=state.seats[seatId]||initial;
   try{
-    const next=await persistSeat(s);
+    const next=await persistSeat(s,draft);
+    await finishSuccessfulEdit(next);
     await logActivity('Gift redemption changed',`${s.id}: ${next.souvenirEligible?'YES':'NO'}`);
-  }catch(err){console.error(err);alert('Could not update Gift redemption: '+err.message);renderPanel()}
+  }catch(err){console.error(err);alert('Could not update Gift redemption: '+err.message);renderPanel(true)}
 });
 confirmBtn.onclick=async()=>{
+  const seatId=state.selected;
+  const initial=state.seats[seatId];
+  if(!initial)return;
+  const draft=captureForm(); // capture before saveUndoSnapshot triggers room onValue
+  if(!draft.guestName)return alert('Enter guest name.');
   if(!(await ensureEditable()))return;
-  let s=state.seats[state.selected];
-  if(!s||!guestInput.value.trim())return alert('Enter guest name.');
+  const s=state.seats[seatId]||initial;
   try{
     confirmBtn.disabled=true;
     await saveUndoSnapshot(`Confirm seat ${s.id}`);
-    s=await persistSeat(s,{status:'reserved',confirmed:true,guestCode:s.guestCode||makeGuestCode()});
-    await logActivity('Seat confirmed',`${s.id} ${s.guestName}${s.souvenirEligible?' · Gift redemption':''}`);
+    const next=await persistSeat(s,draft,{status:'reserved',confirmed:true,guestCode:s.guestCode||makeGuestCode()});
+    await finishSuccessfulEdit(next);
+    await logActivity('Seat confirmed',`${s.id} ${next.guestName}${next.souvenirEligible?' · Gift redemption':''}`);
     qrcode.innerHTML='';
-    new QRCode(qrcode,{text:qrPayload(s),width:260,height:260,correctLevel:QRCode.CorrectLevel.H});
-    qrInfo.innerHTML=`<strong>${esc(s.id)}</strong><br>${esc(s.guestName)}`;
+    new QRCode(qrcode,{text:qrPayload(next),width:260,height:260,correctLevel:QRCode.CorrectLevel.H});
+    qrInfo.innerHTML=`<strong>${esc(next.id)}</strong><br>${esc(next.guestName)}`;
     qrModal.classList.add('open');
-    downloadQr.onclick=()=>{const img=qrcode.querySelector('img')||qrcode.querySelector('canvas');const a=document.createElement('a');a.download=`${s.id}-${s.guestName||'guest'}.png`;a.href=img.tagName==='CANVAS'?img.toDataURL('image/png'):img.src;a.click()};
+    downloadQr.onclick=()=>{const img=qrcode.querySelector('img')||qrcode.querySelector('canvas');const a=document.createElement('a');a.download=`${next.id}-${next.guestName||'guest'}.png`;a.href=img.tagName==='CANVAS'?img.toDataURL('image/png'):img.src;a.click()};
   }catch(err){console.error(err);alert('Could not confirm this guest: '+err.message)}finally{confirmBtn.disabled=false}
 };
 clearBtn.onclick=async()=>{
@@ -138,7 +195,7 @@ clearBtn.onclick=async()=>{
   const s=state.seats[state.selected];if(!s)return;
   await saveUndoSnapshot(`Clear seat ${s.id}`);
   await set(ref(db,roomPath(`seats/${s.id}`)),{...s,status:'available',guestName:'',groupName:'',groupId:'',conditions:'',notes:'',souvenirEligible:false,confirmed:false,guestCode:'',checkedIn:false,checkedInAt:null});
-  await logActivity('Reservation cleared',s.id);
+  formDirty=false;panelSeatId=s.id;await logActivity('Reservation cleared',s.id);
 };
 closeQr.onclick=()=>qrModal.classList.remove('open');
 
