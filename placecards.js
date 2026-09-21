@@ -1,4 +1,4 @@
-import{db,roomPath,ref,onValue,ensureRoom,normalize,sortSeats,esc}from'./common.js?v=20260921-fixv2';
+import{db,roomPath,ref,onValue,ensureRoom,normalize,sortSeats,esc}from'./common.js?v=20260921-adminfixv3';
 const $=id=>document.getElementById(id),sheets=$('placecardSheets');
 await ensureRoom();let seats={},side='duplex',filter='confirmed';
 onValue(ref(db,roomPath('seats')),s=>{seats=normalize(s.val());render()});
@@ -16,7 +16,7 @@ function makeBack(chunk){
   const page=document.createElement('div');page.className='placecard-page placecard-back-page';
   chunk.forEach(s=>{
     const card=document.createElement('div');card.className='placecard-row';
-    card.innerHTML=s?`<div class="placecard-panel menu-label-panel"><strong>DINNER MENU</strong></div><div class="placecard-fold-line"></div><div class="placecard-panel menu-qr-panel"><div class="menu-placecard-qr"></div></div>`:`<div class="placecard-panel"></div><div class="placecard-fold-line"></div><div class="placecard-panel"></div>`;
+    card.innerHTML=s?`<div class="placecard-panel menu-label-panel"><img class="placecard-menu-logo" src="assets/color-logo.png" alt="event logo"><strong>DINNER MENU</strong><div class="menu-explore-en">Explore tonight’s buffet selection</div><div class="menu-explore-th">รายการอาหารค่ำสำหรับค่ำคืนนี้</div></div><div class="placecard-fold-line"></div><div class="placecard-panel menu-qr-panel"><div class="menu-placecard-qr"></div><div class="menu-scan-text">SCAN TO VIEW MENU</div></div>`:`<div class="placecard-panel"></div><div class="placecard-fold-line"></div><div class="placecard-panel"></div>`;
     page.appendChild(card);if(s)new QRCode(card.querySelector('.menu-placecard-qr'),{text:menuUrl(),width:142,height:142,correctLevel:QRCode.CorrectLevel.H});
   });return page;
 }
