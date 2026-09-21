@@ -1,55 +1,62 @@
-BALLROOM GIFT + MENU + PLACE CARDS UPDATE
+BALLROOM ONLINE — BUG FIX + CHECK-IN CAMERA + PORTRAIT PLACE CARDS V2
 
-WHAT THIS ADDS
-1) Admin: Gift redemption Yes/No per guest.
-2) Tickets: Standard tickets remain 85 x 50 mm, 10/A4.
-3) Gift Redemption tickets: main ticket stays exactly 85 x 50 mm plus a 14 mm tear-off VARX stub, 8/A4.
-   - VARX logo left
-   - GIFT REDEMPTION large
-   - small seat number
-   - dotted tear line + scissors
-   - light/thin cutting borders
-4) Public menu page: menu.html, dark warm background, white event logo, bilingual long-scroll mobile design.
-5) Place Cards: placecards.html, A4 landscape, 3 guests/A4.
-   - Front: large seat | full guest name
-   - Back: DINNER MENU | QR to menu.html
-   - Duplex/front-only/back-only print modes
-6) Summary/CSV/Google Sheet includes Gift Redemption eligibility.
+Upload/replace these files in the ROOT of the existing GitHub repository:
 
-UPLOAD TO GITHUB ROOT
-- common.js
-- admin.html
-- admin.js
-- tickets.html
-- tickets.js
-- summary.html
-- summary.js
-- styles.css
-- menu.html
-- placecards.html
-- placecards.js
-- assets/varx-logo.png
+common.js
+admin.js
+admin.html
+tickets.js
+tickets.html
+summary.js
+summary.html
+styles.css
+checkin.js
+checkin.html
+checkin-ipad.css
+placecards.js
+placecards.html
 
-The package also contains assets/color-logo.png and assets/white-logo.png for completeness. If your current logo files are already correct, you may keep them.
+DO NOT replace:
+firebase-config.js
+google-sheet-config.js
+access.js
+menu.html
+assets/
 
-GOOGLE SHEET (OPTIONAL BUT RECOMMENDED)
-Replace Apps Script Code.gs with apps-script/Code.gs, then Deploy > Manage deployments > Edit > New version > Deploy.
-This adds the Gift Redemption column to the synced sheet.
+FIXES
+1. Admin guest/gift data
+- Seat edits use targeted Firebase updates instead of replacing the complete seat record.
+- Gift redemption saves immediately when Yes/No is changed.
+- Legacy gift values (true / yes / giftRedemption) are recognized.
+- Confirm & QR keeps the gift setting and guest details.
 
-DO NOT REPLACE
-- firebase-config.js
-- google-sheet-config.js
-- access.js
-- checkin files
-- display files
-Your existing working configuration and iPad Check-in remain unchanged.
+2. Ticket gift group
+- Gift ticket filter recognizes current and legacy gift values.
+- Guest name, seat and QR remain on the main ticket.
+- Existing Standard 10/A4 and Gift Redemption 8/A4 formats are retained.
 
-PUBLIC MENU URL
-https://vich21000.github.io/ballroom-live/menu.html
+3. Check-in
+- Front and Back buttons added.
+- Actual camera device selector added after Safari camera permission is granted.
+- Smaller live camera box.
+- Large wedding logo remains centered.
+- Manual seat check stays on the left; live camera stays on the right.
+- Compatible with iPad Safari and desktop/notebook webcams.
 
-PLACE CARD URL
-https://vich21000.github.io/ballroom-live/placecards.html?room=main-ballroom
+4. Place Cards
+- A4 PORTRAIT.
+- 3 folded cards per sheet, stacked vertically.
+- Front left: large seat number only.
+- Front right: full guest name only, plus small wedding logo at bottom center.
+- Back left: DINNER MENU only.
+- Back right: menu QR only.
+- No SEAT / GUEST / FULL NAME helper text.
+- Safe print dimensions leave a little spare printable area to reduce blank-page errors.
 
-PRINT NOTES
-Tickets: A4 portrait.
-Place cards: A4 landscape, 3 guests/sheet. Duplex printing normally uses Flip on short edge; test one sheet first because printer drivers vary.
+AFTER UPLOAD
+1. Commit changes.
+2. Wait for GitHub Pages to deploy.
+3. Desktop: Ctrl + Shift + R.
+4. iPad Safari: close the old tab and reopen the page once to avoid cached JS/CSS.
+
+For Place Cards, test one duplex sheet first. With portrait printing, start with Flip on long edge. Printer behavior can vary, so confirm front/back orientation before the full run.

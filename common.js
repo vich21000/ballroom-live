@@ -21,6 +21,11 @@ export function short(v,m=10){v=String(v||'').trim();return v.length>m?v.slice(0
 export function normalize(v){return v?(Array.isArray(v)?Object.fromEntries(v.filter(Boolean).map(x=>[x.id,x])):v):{}}
 export function makeGuestCode(){const a=new Uint8Array(12);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')}
 export function qrPayload(s){return `BALLROOM|${roomId}|${s.id}|${s.guestCode}`}
+export function isGiftEligible(s){
+  if(!s)return false;
+  const v=s.souvenirEligible ?? s.giftRedemption ?? s.giftEligible;
+  return v===true||v===1||String(v||'').toLowerCase()==='yes'||String(v||'').toLowerCase()==='true'||String(v||'')==='1';
+}
 
 export function defaultRoom(){
   const tables={},seats={};
@@ -65,6 +70,9 @@ export async function ensureRoom(){
 
   for(const [id,seat] of Object.entries(fresh.seats)){
     if(!seats[id])writes.push(set(ref(db,roomPath(`seats/${id}`)),seat));
+    else if(seats[id].souvenirEligible===undefined&&seats[id].giftRedemption===undefined&&seats[id].giftEligible===undefined){
+      writes.push(update(ref(db,roomPath(`seats/${id}`)),{souvenirEligible:false}));
+    }
   }
 
   // Keep existing used seats above the 32-seat standard. Only remove unused extras.
