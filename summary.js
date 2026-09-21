@@ -1,1 +1,29 @@
-import{db,roomPath,roomId,ref,onValue,get,set,ensureRoom,normalize,sortSeats,esc,createCloudBackup,defaultRoom}from'./common.js';import{APPS_SCRIPT_WEB_APP_URL,GOOGLE_SHEET_ID}from'./google-sheet-config.js';await ensureRoom();let seats={};onValue(ref(db,roomPath('seats')),s=>{seats=normalize(s.val());render()});function rows(){return Object.values(seats).sort(sortSeats)}function render(){const q=summarySearch.value.trim().toLowerCase(),a=rows();summaryBody.innerHTML=a.filter(s=>!q||[s.id,s.guestName,s.groupName,s.status,s.conditions,s.notes].join(' ').toLowerCase().includes(q)).map(s=>`<tr><td>${esc(s.id)}</td><td>${esc(s.guestName)}</td><td>${esc(s.groupName)}</td><td>${esc(s.status)}</td><td>${s.confirmed?'Yes':'No'}</td><td>${s.checkedIn?'Yes':'No'}</td><td>${esc(s.conditions)}</td><td>${esc(s.notes)}</td></tr>`).join('');sumTotal.textContent=a.length;sumAssigned.textContent=a.filter(s=>s.guestName||s.groupName).length;sumChecked.textContent=a.filter(s=>s.checkedIn).length;sumNotArrived.textContent=a.filter(s=>(s.guestName||s.groupName)&&!s.checkedIn).length}summarySearch.oninput=render;function csv(){const h=['Seat','Guest','Group','Group ID','Status','Confirmed','Checked In','Conditions','Notes'];const body=rows().map(s=>[s.id,s.guestName,s.groupName,s.groupId,s.status,s.confirmed,s.checkedIn,s.conditions,s.notes].map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(','));return[h.join(','),...body].join('\n')}csvBtn.onclick=()=>{const b=new Blob([csv()],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`ballroom-${roomId}.csv`;a.click()};sheetBtn.onclick=async()=>{if(!APPS_SCRIPT_WEB_APP_URL.startsWith('http'))return alert('Add Apps Script Web App URL in google-sheet-config.js');const res=await fetch(APPS_SCRIPT_WEB_APP_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({sheetId:GOOGLE_SHEET_ID,roomId,rows:rows()})});alert(await res.text())};exportBtn.onclick=async()=>{const s=await get(ref(db,roomPath()));const b=new Blob([JSON.stringify(s.val(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`ballroom-${roomId}.json`;a.click()};importBtn.onclick=()=>importFile.click();importFile.onchange=async e=>{await createCloudBackup('before-import');await set(ref(db,roomPath()),JSON.parse(await e.target.files[0].text()))};restoreBtn.onclick=()=>alert('Restore backups from Admin page.');resetBtn.onclick=()=>alert('Reset is available from Admin page.');
+import{db,roomPath,roomId,ref,onValue,get,set,ensureRoom,normalize,sortSeats,esc,createCloudBackup,defaultRoom}from'./common.js';import{APPS_SCRIPT_WEB_APP_URL,GOOGLE_SHEET_ID}from'./google-sheet-config.js';await ensureRoom();let seats={};onValue(ref(db,roomPath('seats')),s=>{seats=normalize(s.val());render()});function rows(){return Object.values(seats).sort(sortSeats)}function render(){const q=summarySearch.value.trim().toLowerCase(),a=rows();summaryBody.innerHTML=a.filter(s=>!q||[s.id,s.guestName,s.groupName,s.status,s.souvenirEligible?'gift':'',s.conditions,s.notes].join(' ').toLowerCase().includes(q)).map(s=>`<tr><td>${esc(s.id)}</td><td>${esc(s.guestName)}</td><td>${esc(s.groupName)}</td><td>${esc(s.status)}</td><td>${s.confirmed?'Yes':'No'}</td><td>${s.checkedIn?'Yes':'No'}</td><td>${s.souvenirEligible?'Yes':'No'}</td><td>${esc(s.conditions)}</td><td>${esc(s.notes)}</td></tr>`).join('');sumTotal.textContent=a.length;sumAssigned.textContent=a.filter(s=>s.guestName||s.groupName).length;sumChecked.textContent=a.filter(s=>s.checkedIn).length;sumNotArrived.textContent=a.filter(s=>(s.guestName||s.groupName)&&!s.checkedIn).length;sumGift.textContent=a.filter(s=>s.souvenirEligible===true).length}summarySearch.oninput=render;function csv(){const h=['Seat','Guest','Group','Group ID','Status','Confirmed','Checked In','Gift Redemption','Conditions','Notes'];const body=rows().map(s=>[s.id,s.guestName,s.groupName,s.groupId,s.status,s.confirmed,s.checkedIn,s.souvenirEligible?'Yes':'No',s.conditions,s.notes].map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(','));return[h.join(','),...body].join('\n')}csvBtn.onclick=()=>{const b=new Blob([csv()],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`ballroom-${roomId}.csv`;a.click()};sheetBtn.onclick=async()=>{
+  const url=String(APPS_SCRIPT_WEB_APP_URL||'').trim();
+  const rawId=String(GOOGLE_SHEET_ID||'').trim();
+  const idMatch=rawId.match(/[a-zA-Z0-9_-]{20,}/);
+  if(!url.startsWith('https://script.google.com/macros/s/')||!url.endsWith('/exec')){
+    return alert('Apps Script URL is invalid. Use the deployed Web App URL ending with /exec.');
+  }
+  if(!idMatch){
+    return alert('Google Sheet ID is invalid. Paste only the ID between /d/ and /edit.');
+  }
+  const payload={sheetId:idMatch[0],roomId,rows:rows()};
+  sheetBtn.disabled=true;
+  const oldText=sheetBtn.textContent;
+  sheetBtn.textContent='Syncing...';
+  try{
+    await fetch(url,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload)
+    });
+    alert('Sync request sent successfully. Open Google Sheet and check the tab: Ballroom '+roomId);
+  }catch(err){
+    alert('Unable to send sync request: '+err.message);
+  }finally{
+    sheetBtn.disabled=false;
+    sheetBtn.textContent=oldText;
+  }
+};exportBtn.onclick=async()=>{const s=await get(ref(db,roomPath()));const b=new Blob([JSON.stringify(s.val(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`ballroom-${roomId}.json`;a.click()};importBtn.onclick=()=>importFile.click();importFile.onchange=async e=>{await createCloudBackup('before-import');await set(ref(db,roomPath()),JSON.parse(await e.target.files[0].text()))};restoreBtn.onclick=()=>alert('Restore backups from Admin page.');resetBtn.onclick=()=>alert('Reset is available from Admin page.');
