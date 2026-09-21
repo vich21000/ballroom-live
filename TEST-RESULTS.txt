@@ -1,0 +1,40 @@
+SAVE GUARD 5.1 - AUTOMATED TEST REPORT
+
+Environment: headless Chromium using Playwright; local source files.
+Firebase: in-memory test adapter with asynchronous notifications, artificial
+write delays, permission failure injection and simulated second-device edits.
+QR library: stubbed only in the test harness. Production uses its existing QR library.
+No Firebase project, credentials, guest data or production database writes used.
+Live deployed files: retrieval unsuccessful; physical iPad Safari not tested.
+
+PREVIOUS V4 REPRODUCTION:
+1. Select H1 and enter Initial name.
+2. Choose Gift Yes, starting the previous automatic save.
+3. Type a longer name before the simulated write acknowledgement.
+4. Old completion handler replaces the new text with Initial name.
+Observed in Chromium with no JavaScript exception.
+
+NEW PATCH RESULTS:
+1. PASS - Save and reselect 11 seats across every table A-H
+2. PASS - Regression: gift change cannot launch stale auto-save
+3. PASS - Typing during slow Save remains a newer unsaved draft
+4. PASS - Unrelated check-in and activity updates preserve typed data
+5. PASS - Saving guest note preserves concurrent check-in status and QR token
+6. PASS - Switching seats keeps separate unsaved drafts
+7. PASS - Save response cannot overwrite another selected seat
+8. PASS - Concurrent edit to same name is rejected without losing draft
+9. PASS - Permission/write failure leaves draft and permits retry
+10. PASS - Offline form is retained; no false saved indicator
+11. PASS - Save/Confirm double-clicks cannot issue parallel guest writes
+12. PASS - Gift Yes and No both persist with explicit Save
+13. PASS - Thai name and composition event survive refresh and Confirm
+14. PASS - Unlock flow cannot clear captured guest details
+15. PASS - Legacy database key is used instead of inventing a duplicate seat path
+16. PASS - Duplicate seat identifiers are refused visibly
+17. PASS - Saved local draft can be restored after page recreation
+18. PASS - Intentional Clear remains available and clears only selected reservation
+
+Total: 18 passed; 0 failed.
+
+These are regression tests of the supplied patch; they are not a claim that
+every production/browser/network condition has been verified.
