@@ -1,0 +1,39 @@
+/* Place Cards only. No downloadable font assets, no changes to seating data.
+   The optional helper loads a licensed local font or a user-selected font file. */
+body.placecards-page .placecard-fullname[data-pc-thai-name="true"] {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: center;
+  line-height: 1.40;
+  padding-top: 1mm;
+  padding-bottom: 1mm;
+  text-overflow: clip;
+}
+body.placecards-page .placecard-fullname .pc-thai-run {
+  font-family: "Ballroom Thai 45 Light", "DB Helvethaica X 45 Li", Tahoma, sans-serif;
+  font-weight: 300;
+  font-style: normal;
+  font-synthesis: none;
+  letter-spacing: 0;
+  line-height: inherit;
+}
+body.placecards-page .pc-font-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+body.placecards-page .pc-font-info { flex: 1 1 300px; }
+body.placecards-page .pc-font-info strong { display: block; font-size: 14px; }
+body.placecards-page .pc-font-note { margin: 4px 0 0; font-size: 12px; color: #52606b; line-height: 1.5; }
+body.placecards-page .pc-font-status { margin: 5px 0 0; font-size: 13px; }
+body.placecards-page .pc-font-status[data-state="ready"] { color: #166534; }
+body.placecards-page .pc-font-status[data-state="warning"] { color: #92400e; }
+body.placecards-page .pc-font-status[data-state="error"] { color: #b91c1c; }
+body.placecards-page [data-pc-name-overflow="true"] { outline: 1px dashed #b91c1c; }
+@media print {
+  body.placecards-page .pc-font-toolbar { display: none !important; }
+  body.placecards-page [data-pc-name-overflow="true"] { outline: none; }
+}
