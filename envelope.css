@@ -28,8 +28,8 @@
 .envelope-sheet{
   --left-offset:15mm;
   --bottom-offset:17mm;
-  --seat-size:26pt;
-  --name-size:20pt;
+  --seat-size:50mm;
+  --name-size:2cm;
   position:relative;
   width:230mm;
   height:160mm;
