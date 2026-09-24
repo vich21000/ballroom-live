@@ -29,7 +29,7 @@
   --left-offset:15mm;
   --bottom-offset:17mm;
   --seat-size:50mm;
-  --name-size:2cm;
+  --name-size:20pt;
   position:relative;
   width:230mm;
   height:160mm;

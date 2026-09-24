@@ -6,7 +6,7 @@ let seats={};
 let filter='confirmed';
 let query='';
 
-const settings={left:15,bottom:17,seat:5,name:2};
+const settings={left:15,bottom:17,seat:5,name:20};
 
 await ensureRoom();
 onValue(ref(db,roomPath('seats')),snap=>{
@@ -31,18 +31,18 @@ function applyVars(el){
   el.style.setProperty('--left-offset',settings.left+'mm');
   el.style.setProperty('--bottom-offset',settings.bottom+'mm');
   el.style.setProperty('--seat-size',settings.seat+'cm');
-  el.style.setProperty('--name-size',settings.name+'cm');
+  el.style.setProperty('--name-size',settings.name+'pt');
 }
 
 function fitName(el){
   const base=settings.name;
   let size=base;
-  el.style.fontSize=size+'cm';
+  el.style.fontSize=size+'pt';
   const line=el.closest('.envelope-line');
   if(!line)return;
   while(size>12 && line.scrollWidth>line.clientWidth){
     size-=.5;
-    el.style.fontSize=size+'cm';
+    el.style.fontSize=size+'pt';
   }
 }
 
@@ -94,8 +94,8 @@ $('bottomOffset').addEventListener('input',()=>updateSetting('bottom','bottomOff
 $('seatSize').addEventListener('input',()=>updateSetting('seat','seatSize'));
 $('nameSize').addEventListener('input',()=>updateSetting('name','nameSize'));
 $('resetSettingsBtn').onclick=()=>{
-  Object.assign(settings,{left:15,bottom:17,seat:5,name:2});
-  $('leftOffset').value=15;$('bottomOffset').value=17;$('seatSize').value=5;$('nameSize').value=2;
+  Object.assign(settings,{left:15,bottom:17,seat:5,name:20});
+  $('leftOffset').value=15;$('bottomOffset').value=17;$('seatSize').value=5;$('nameSize').value=20;
   render();
 };
 $('printBtn').onclick=()=>window.print();

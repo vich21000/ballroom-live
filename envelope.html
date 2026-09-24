@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Envelope Printing</title>
   <script src="access.js"></script>
-  <link rel="stylesheet" href="styles.css?v=20260924-envelope-v1-4">
-  <link rel="stylesheet" href="envelope.css?v=20260924-envelope-v1-4">
+  <link rel="stylesheet" href="styles.css?v=20260924-envelope-v1-3">
+  <link rel="stylesheet" href="envelope.css?v=20260924-envelope-v1-3">
 </head>
 <body data-protected-page class="envelope-page">
 <header class="no-print">
@@ -52,7 +52,7 @@
       <span><input id="seatSize" type="number" min="2" max="7" step="0.1" value="5"> cm</span>
     </label>
     <label>Name size
-      <span><input id="nameSize" type="number" min="1" max="4" step="0.1" value="2"> cm</span>
+      <span><input id="nameSize" type="number" min="13" max="30" step="1" value="20"> pt</span>
     </label>
     <button id="resetSettingsBtn">Reset</button>
   </section>
@@ -65,6 +65,6 @@
   <div id="envelopeSheets" class="envelope-sheets" aria-live="polite"></div>
 </main>
 
-<script type="module" src="envelope.js?v=20260924-envelope-v1-4"></script>
+<script type="module" src="envelope.js?v=20260924-envelope-v1-3"></script>
 </body>
 </html>
