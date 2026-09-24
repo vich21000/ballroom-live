@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Envelope Printing</title>
   <script src="access.js"></script>
-  <link rel="stylesheet" href="styles.css?v=20260924-envelope-v1-3">
-  <link rel="stylesheet" href="envelope.css?v=20260924-envelope-v1-3">
+  <link rel="stylesheet" href="styles.css?v=20260924-envelope-v1-5">
+  <link rel="stylesheet" href="envelope.css?v=20260924-envelope-v1-5">
 </head>
 <body data-protected-page class="envelope-page">
 <header class="no-print">
@@ -27,7 +27,7 @@
   <section class="card no-print envelope-controls">
     <div>
       <h2>Envelope Printing</h2>
-      <p class="small">230 × 160 mm · 1 envelope per page · 6 cm top flap included in total height · seat + guest name on one line at bottom-left</p>
+      <p class="small">180 × 135 mm closed envelope · pointed 10.5 cm flap · feed sideways: 135 mm edge enters printer first · seat + guest name on one line at bottom-left</p>
     </div>
     <div class="envelope-actions">
       <button id="confirmedBtn" class="active">Confirmed only</button>
@@ -40,31 +40,31 @@
   <section class="card no-print envelope-settings">
     <div class="setting-copy">
       <b>Print alignment</b>
-      <span class="small">Use a test envelope first. Adjust only if your printer shifts the artwork.</span>
+      <span class="small">Insert the envelope sideways 90° so the 13.5 cm edge enters the printer first. Print at 100% / Actual Size.</span>
     </div>
     <label>Left offset
       <span><input id="leftOffset" type="number" min="5" max="40" step="1" value="15"> mm</span>
     </label>
     <label>Bottom offset
-      <span><input id="bottomOffset" type="number" min="5" max="50" step="1" value="17"> mm</span>
+      <span><input id="bottomOffset" type="number" min="5" max="50" step="1" value="14"> mm</span>
     </label>
     <label>Seat size
       <span><input id="seatSize" type="number" min="2" max="7" step="0.1" value="5"> cm</span>
     </label>
     <label>Name size
-      <span><input id="nameSize" type="number" min="13" max="30" step="1" value="20"> pt</span>
+      <span><input id="nameSize" type="number" min="1" max="4" step="0.1" value="2"> cm</span>
     </label>
     <button id="resetSettingsBtn">Reset</button>
   </section>
 
   <div class="no-print envelope-summary">
     <span id="countText">Loading guests…</span>
-    <span class="small">Dashed flap guide is preview-only and will not print.</span>
+    <span class="small">Preview shows the pointed 10.5 cm flap reference. It will not print.</span>
   </div>
 
   <div id="envelopeSheets" class="envelope-sheets" aria-live="polite"></div>
 </main>
 
-<script type="module" src="envelope.js?v=20260924-envelope-v1-3"></script>
+<script type="module" src="envelope.js?v=20260924-envelope-v1-5"></script>
 </body>
 </html>

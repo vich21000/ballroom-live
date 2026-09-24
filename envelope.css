@@ -5,8 +5,14 @@
   font-weight:300;
 }
 
+/*
+  The finished envelope is 180 x 135 mm.
+  It is fed sideways into the printer so the 135 mm edge enters first.
+  Therefore the browser/printer page is 135 x 180 mm portrait, and the
+  180 x 135 mm artwork is rotated 90 degrees automatically when printing.
+*/
 @page{
-  size:230mm 160mm;
+  size:135mm 180mm;
   margin:0;
 }
 
@@ -25,14 +31,16 @@
 .envelope-summary{display:flex;justify-content:space-between;gap:12px;margin:14px 2px 18px;}
 
 .envelope-sheets{display:flex;flex-direction:column;align-items:center;gap:24px;}
+
+/* Screen preview stays in the natural finished-envelope orientation. */
 .envelope-sheet{
   --left-offset:15mm;
-  --bottom-offset:17mm;
-  --seat-size:50mm;
-  --name-size:20pt;
+  --bottom-offset:14mm;
+  --seat-size:5cm;
+  --name-size:2cm;
   position:relative;
-  width:230mm;
-  height:160mm;
+  width:180mm;
+  height:135mm;
   box-sizing:border-box;
   background:#fffdf8;
   box-shadow:0 10px 30px rgba(0,0,0,.12);
@@ -41,29 +49,46 @@
   break-after:page;
 }
 .envelope-sheet:last-child{page-break-after:auto;break-after:auto;}
+
+/* Pointed flap reference on the BACK of the envelope. Preview only.
+   Peak is 105 mm down from the top edge. */
 .envelope-flap-guide{
   position:absolute;
-  left:0;right:0;top:60mm;
-  border-top:1px dashed rgba(0,0,0,.24);
+  inset:0;
   pointer-events:none;
+  opacity:.68;
 }
+.envelope-flap-guide::before,
 .envelope-flap-guide::after{
-  content:"6 cm flap guide · preview only";
+  content:"";
   position:absolute;
-  right:7mm;top:3mm;
-  font:10px/1.2 Arial,sans-serif;
-  color:rgba(0,0,0,.42);
+  top:0;
+  width:1px;
+  height:127.7mm;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,.24) 0 3mm,transparent 3mm 5mm);
+  transform-origin:top center;
 }
+.envelope-flap-guide::before{left:0;transform:rotate(-40.6deg);}
+.envelope-flap-guide::after{right:0;transform:rotate(40.6deg);}
+.envelope-sheet .envelope-print-block::before{
+  content:"Pointed flap 10.5 cm · preview only";
+  position:fixed;
+  left:-9999px;
+}
+.envelope-flap-guide-label{
+  display:none;
+}
+
 .envelope-print-block{
   position:absolute;
   left:var(--left-offset);
   bottom:var(--bottom-offset);
-  max-width:195mm;
+  max-width:155mm;
   color:#9b7336;
   text-align:left;
 }
 .envelope-line{
-  width:195mm;
+  width:155mm;
   display:flex;
   align-items:baseline;
   gap:4mm;
@@ -112,13 +137,19 @@
   .no-print,header{display:none!important;}
   .envelope-main{margin:0!important;padding:0!important;max-width:none!important;}
   .envelope-sheets{display:block!important;margin:0!important;padding:0!important;}
+
+  /* Physical printer page: 135 mm wide x 180 mm feed direction.
+     Rotate the natural 180 x 135 artwork clockwise so the short edge feeds first. */
   .envelope-sheet{
-    width:230mm!important;
-    height:160mm!important;
+    position:relative!important;
+    width:180mm!important;
+    height:135mm!important;
     margin:0!important;
     box-shadow:none!important;
     background:#fff!important;
     overflow:hidden!important;
+    transform-origin:top left!important;
+    transform:translateX(135mm) rotate(90deg)!important;
   }
   .envelope-flap-guide{display:none!important;}
 }
