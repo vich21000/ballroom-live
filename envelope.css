@@ -6,7 +6,7 @@
 }
 
 @page{
-  size:160mm 230mm;
+  size:230mm 160mm;
   margin:0;
 }
 
@@ -31,8 +31,8 @@
   --seat-size:26pt;
   --name-size:20pt;
   position:relative;
-  width:160mm;
-  height:230mm;
+  width:230mm;
+  height:160mm;
   box-sizing:border-box;
   background:#fffdf8;
   box-shadow:0 10px 30px rgba(0,0,0,.12);
@@ -58,12 +58,12 @@
   position:absolute;
   left:var(--left-offset);
   bottom:var(--bottom-offset);
-  max-width:130mm;
+  max-width:195mm;
   color:#9b7336;
   text-align:left;
 }
 .envelope-line{
-  width:130mm;
+  width:195mm;
   display:flex;
   align-items:baseline;
   gap:4mm;
@@ -113,8 +113,8 @@
   .envelope-main{margin:0!important;padding:0!important;max-width:none!important;}
   .envelope-sheets{display:block!important;margin:0!important;padding:0!important;}
   .envelope-sheet{
-    width:160mm!important;
-    height:230mm!important;
+    width:230mm!important;
+    height:160mm!important;
     margin:0!important;
     box-shadow:none!important;
     background:#fff!important;
