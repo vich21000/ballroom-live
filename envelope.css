@@ -1,0 +1,124 @@
+@font-face{
+  font-family:"DB Helvethaica X Local";
+  src:local("DB Helvethaica X 45 Li"),local("DB Helvethaica X Li"),local("DB Helvethaica X");
+  font-style:normal;
+  font-weight:300;
+}
+
+@page{
+  size:160mm 230mm;
+  margin:0;
+}
+
+.envelope-page{background:#f2f1ee;}
+.envelope-main{max-width:1180px;margin:0 auto;padding:22px;}
+.envelope-controls{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;}
+.envelope-controls h2{margin:0 0 5px;}
+.envelope-controls p{margin:0;}
+.envelope-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.envelope-actions input[type="search"]{min-width:230px;}
+.envelope-settings{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:14px;}
+.envelope-settings .setting-copy{min-width:240px;flex:1;display:flex;flex-direction:column;gap:3px;}
+.envelope-settings label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;}
+.envelope-settings label span{display:flex;align-items:center;gap:5px;font-weight:400;}
+.envelope-settings input[type="number"]{width:68px;}
+.envelope-summary{display:flex;justify-content:space-between;gap:12px;margin:14px 2px 18px;}
+
+.envelope-sheets{display:flex;flex-direction:column;align-items:center;gap:24px;}
+.envelope-sheet{
+  --left-offset:15mm;
+  --bottom-offset:17mm;
+  --seat-size:26pt;
+  --name-size:20pt;
+  position:relative;
+  width:160mm;
+  height:230mm;
+  box-sizing:border-box;
+  background:#fffdf8;
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+  overflow:hidden;
+  page-break-after:always;
+  break-after:page;
+}
+.envelope-sheet:last-child{page-break-after:auto;break-after:auto;}
+.envelope-flap-guide{
+  position:absolute;
+  left:0;right:0;top:60mm;
+  border-top:1px dashed rgba(0,0,0,.24);
+  pointer-events:none;
+}
+.envelope-flap-guide::after{
+  content:"6 cm flap guide · preview only";
+  position:absolute;
+  right:7mm;top:3mm;
+  font:10px/1.2 Arial,sans-serif;
+  color:rgba(0,0,0,.42);
+}
+.envelope-print-block{
+  position:absolute;
+  left:var(--left-offset);
+  bottom:var(--bottom-offset);
+  max-width:130mm;
+  color:#9b7336;
+  text-align:left;
+}
+.envelope-line{
+  width:130mm;
+  display:flex;
+  align-items:baseline;
+  gap:4mm;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.envelope-seat{
+  flex:0 0 auto;
+  font-family:"Trajan Pro","Trajan Pro 3","Cinzel","Times New Roman",serif;
+  font-size:var(--seat-size);
+  line-height:1;
+  letter-spacing:.02em;
+  margin:0;
+  font-weight:400;
+}
+.envelope-name{
+  flex:0 1 auto;
+  min-width:0;
+  font-family:"Trajan Pro","Trajan Pro 3","Cinzel","Times New Roman",serif;
+  font-size:var(--name-size);
+  line-height:1.06;
+  font-weight:400;
+  letter-spacing:.005em;
+}
+.envelope-name.has-thai{
+  font-family:"DB Helvethaica X Local","DB Helvethaica X 45 Li","DB Helvethaica X Li","Leelawadee UI","Tahoma",sans-serif;
+  font-weight:300;
+  line-height:.95;
+  letter-spacing:0;
+}
+.envelope-empty{
+  width:min(680px,92vw);
+  padding:50px 20px;
+  text-align:center;
+  color:#777;
+}
+
+@media(max-width:800px){
+  .envelope-main{padding:12px;}
+  .envelope-sheet{transform-origin:top center;}
+  .envelope-actions input[type="search"]{min-width:170px;flex:1;}
+}
+
+@media print{
+  html,body{margin:0!important;padding:0!important;background:#fff!important;}
+  .no-print,header{display:none!important;}
+  .envelope-main{margin:0!important;padding:0!important;max-width:none!important;}
+  .envelope-sheets{display:block!important;margin:0!important;padding:0!important;}
+  .envelope-sheet{
+    width:160mm!important;
+    height:230mm!important;
+    margin:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+    overflow:hidden!important;
+  }
+  .envelope-flap-guide{display:none!important;}
+}

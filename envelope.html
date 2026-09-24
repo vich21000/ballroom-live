@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Envelope Printing</title>
+  <script src="access.js"></script>
+  <link rel="stylesheet" href="styles.css?v=20260921-envelope-v1-1">
+  <link rel="stylesheet" href="envelope.css?v=20260924-envelope-v1-1">
+</head>
+<body data-protected-page class="envelope-page">
+<header class="no-print">
+  <span class="pill">LIVE ONLINE</span>
+  <span class="logo-card"><img class="header-logo" src="assets/color-logo.png" alt="event logo"></span>
+  <a class="nav-link" href="admin.html?room=main-ballroom">Admin</a>
+  <a class="nav-link" href="display.html?room=main-ballroom">Display</a>
+  <a class="nav-link" href="checkin.html?room=main-ballroom">Check-in</a>
+  <a class="nav-link" href="summary.html?room=main-ballroom">Summary</a>
+  <a class="nav-link" href="tickets.html?room=main-ballroom">Print Tickets</a>
+  <a class="nav-link" href="placecards.html?room=main-ballroom">Place Cards</a>
+  <a class="nav-link active" href="envelope.html?room=main-ballroom">Envelopes</a>
+  <div class="spacer"></div>
+  <button data-lock-btn>Lock</button>
+</header>
+
+<main class="envelope-main">
+  <section class="card no-print envelope-controls">
+    <div>
+      <h2>Envelope Printing</h2>
+      <p class="small">160 × 230 mm · 1 envelope per page · seat + guest name on one line at bottom-left</p>
+    </div>
+    <div class="envelope-actions">
+      <button id="confirmedBtn" class="active">Confirmed only</button>
+      <button id="allBtn">All assigned</button>
+      <input id="searchInput" type="search" placeholder="Search seat / guest" aria-label="Search seat or guest">
+      <button id="printBtn" class="primary">Print Envelopes</button>
+    </div>
+  </section>
+
+  <section class="card no-print envelope-settings">
+    <div class="setting-copy">
+      <b>Print alignment</b>
+      <span class="small">Use a test envelope first. Adjust only if your printer shifts the artwork.</span>
+    </div>
+    <label>Left offset
+      <span><input id="leftOffset" type="number" min="5" max="40" step="1" value="15"> mm</span>
+    </label>
+    <label>Bottom offset
+      <span><input id="bottomOffset" type="number" min="5" max="50" step="1" value="17"> mm</span>
+    </label>
+    <label>Seat size
+      <span><input id="seatSize" type="number" min="16" max="40" step="1" value="26"> pt</span>
+    </label>
+    <label>Name size
+      <span><input id="nameSize" type="number" min="13" max="30" step="1" value="20"> pt</span>
+    </label>
+    <button id="resetSettingsBtn">Reset</button>
+  </section>
+
+  <div class="no-print envelope-summary">
+    <span id="countText">Loading guests…</span>
+    <span class="small">Dashed flap guide is preview-only and will not print.</span>
+  </div>
+
+  <div id="envelopeSheets" class="envelope-sheets" aria-live="polite"></div>
+</main>
+
+<script type="module" src="envelope.js?v=20260924-envelope-v1-1"></script>
+</body>
+</html>
